@@ -1,0 +1,187 @@
+---
+title: "Tarea_3"
+author: "Ivan"
+date: "2025-03-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Librerias a utilizar
+library(phyloseq)
+library(microbiome)
+library(ggplot2)
+library(vegan)
+library(dplyr)
+```
+
+### Explorando el objeto phyloseq
+
+```{r}
+data("dietswap", package = "microbiome")
+filo_sec <- dietswap
+filo_sec
+
+View(otu_table(filo_sec))
+
+View(sample_data(filo_sec))
+
+View(tax_table(filo_sec))
+```
+
+De acuerdo con el codigo anterior ¿Cuántas muestras y taxones contiene el objeto? - Tiene 222 muestras y 130 taxones
+
+¿Qué variables están disponibles en los metadatos de las muestras? - Son 8, las cuales son: numero de muestra, nombre de la muestra, sexo, nacionalidad, grupo, punto de tiempo, punto de tiempo dentro de grupo, indice de peso.
+
+### Curvas de rarefacción
+
+Para realizar las curvas de rarefacción usaremos la función rarecurve de vegan.
+
+Para ejecutar la función es necesario convertir nuestra otu table a un data frame o matriz, y posteriormente invertir la posición de las columnas con la de los renglones.
+```{r}
+# generamos un objeto a partir de la otu table
+otu_table(filo_sec) -> abundancias
+
+# convertimos el objeto a data frame
+data_abundancias <- as.data.frame(abundancias)
+
+# transponemos el data frame para que se invierta la posicion de los renglones con las columnas
+
+t(data_abundancias) -> t_data_abundancias
+
+# Para que la curva de cada sample se distinga la una de la otra le pedi a chat gpt un vector de colores
+
+colores_chat <- c("black", "darkblue", "darkcyan", "darkgoldenrod",
+                  "darkgray", "darkgreen", "darkgrey", "darkkhaki",
+                  "darkmagenta", "darkolivegreen", "darkorange", "darkorchid",
+                  "darkred", "darksalmon", "darkseagreen", "darkslateblue",
+                  "darkslategray", "darkslategrey", "darkturquoise", "darkviolet",
+                  "midnightblue", "navy","brown","deepskyblue", "skyblue")
+
+# Generamos las graficas utilizando el el data frame transpuesto, variando el rango de renglones (samples) que se estan tomando en cuenta.
+
+rarecurve(t_data_abundancias[1:25, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[26:50, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[51:75, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[76:100, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[100:125, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[126:150, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[151:175, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[176:200, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE) 
+
+rarecurve(t_data_abundancias[201:222, ], 
+          step = 25, 
+          xlab = "Tamaño muestral", 
+          ylab = "Especies",
+          tidy = FALSE,
+          col = colores_chat,  
+          label = FALSE)
+
+```
+
+¿Qué indican estas curvas?
+  - Nos dicen si el numero de muestreos por zona fue            suficiente para capturar una riqueza de especies cercana     a la realidad.
+  
+¿Hay muestras que deberían descartarse por bajo conteo?
+  - Si, pero debido a que realice las graficas para             conjuntos de 25 muestras no se sabe exactamente que         muestra es, de manera que realice el siguiente codigo       para averiguarlo.
+```{r}
+# Analizando las graficas podemos notar que en el segmento    que va de 51 a 75 hay una muestra que no llega a su         asintota, de manera que trabajare con ese segmento.
+
+t_data_abundancias[51:75,] -> rango 
+
+# Inicializamos la variable x en 50 para que se sume con i y el contador inicie en 51
+x <- 50
+for (i in 1:25) {
+  sum(rango[i,]) -> tamaño_muestral
+  x+i -> muestra
+  print(paste0("El tamaño muestral es: ",tamaño_muestral,
+                " para la muestra ",muestra))
+}
+```
+La muestra que se deberia de descartar es la numero 56, ya que cuenta con 1776 individuos y no llega a su asintota. Esto lo comprobamos en la grafica, ya que es la unica linea cuyo tamaño muestral es menor a 5000.
+
+
+### Diversidad alfa (𝛼)
+Calcular y graficar los siguientes indices
+- Riqueza
+- Shannon
+- Simpson
+```{r}
+# Riqueza
+plot_richness(filosec.prune, x = "nationality", measures = "Observed", color = "sex")
+# La grafica nos muestra la riqueza de acuerdo a la         nacionalidad y ditingue los sexos por colores.
+
+# Shannon
+plot_richness(filosec.prune, x = "nationality", measures = "shannon", color = "sex")
+
+plot_richness(filosec.prune, measures="Shannon", x="sex", color="bmi_group")
+
+
+# Simpson
+plot_richness(filosec.prune, x = "nationality", measures = "simpson", color = "sex")
+
+plot_richness(filosec.prune, measures="simpson", x="sex", color="bmi_group")
+
+
+```
+
+# ¿Qué interpretas de estas gráficas?
+# ¿Hay diferencias notorias entre grupos?
