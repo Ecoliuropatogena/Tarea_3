@@ -309,24 +309,83 @@ plot_bar(filo_sec, fill = "group") +
 # Entrega el código y muestra las dimensiones del objeto resultante
 
 data("GlobalPatterns")
-gp <- GlobalPatterns
 
 
-<- filter_taxa(carbom, function(x) sum(x > total*0.20) > 0, TRUE)
+GP <- prune_taxa(taxa_sums(GlobalPatterns) > 0, GlobalPatterns)
+
+human <- get_variable(GP, "SampleType") %in% c("Feces", "Mock", "Skin", "Tongue")
+
+sample_data(GP)$human <- factor(human)
+
+
+cinco_lec_20<- filter_taxa(gp, function(x) sum(x > total*0.20) > 0, TRUE)
 
 
 #----------------------------------------------------------------------------#
                         # Diversidad alfa #
 # Calcular 3 índices de diversidad alfa (Shannon, Simpson, Observed)
-# Crear boxplots comparativos de los índices entre tipos de muestra
-# Realizar prueba estadística (Kruskal-Wallis) para diferencias entre grupos
+indices_diversidad <-plot_richness(GP, x = "Primer", measures = c("Observed", "shannon", "simpson"), color = "SampleType")
+indices_diversidad
 
+
+
+# Crear boxplots comparativos de los índices entre tipos de muestra
+alpha_meas = c("Observed","Shannon", "Simpson")
+p <- plot_richness(GP, "human", "SampleType", measures=alpha_meas)
+
+p + geom_boxplot(data=p$data, aes(x=human, y=value, color=NULL), alpha=0.1)
 
 
 #----------------------------------------------------------------------------#
                     # Curvas de Rango-Abundancia #
 # Crear gráficas de rango-abundancia para cada tipo de muestra 
-# Usar escala log10 en Y Comparar patrones entre ambientes
+
+soil_subset <- subset_samples(GP, SampleType == "Soil")
+ab_soils <- taxa_sums(soil_subset)
+ab_soils_ord  <-sort(ab_soils, decreasing = TRUE)
+
+Feces_subset <- subset_samples(GP, SampleType == "Feces")
+ab_feces <- taxa_sums(Feces_subset)
+ab_feces_ord <- sort(ab_feces, decreasing = TRUE)
+
+Skin_subset <- subset_samples(GP, SampleType == "Skin")
+ab_skin <- taxa_sums(Skin_subset)
+ab_skin_ord <- sort(ab_skin, decreasing = TRUE)
+
+Tongue_subset <- subset_samples(GP, SampleType == "Tongue")
+ab_tongue <- taxa_sums(Tongue_subset)
+ab_tongue_ord <- sort(ab_tongue, decreasing = TRUE)
+
+Freshwater_subset <- subset_samples(GP, SampleType == "Freshwater")
+ab_fw <- taxa_sums(Freshwater_subset)
+ab_fw_ord <- sort(ab_fw, decreasing = TRUE)
+
+Freshwater_creek_subset <- subset_samples(GP, SampleType == "Freshwater (creek)")
+ab_fw_cr <- taxa_sums(Freshwater_creek_subset)
+ab_fw_cr_ord <- sort(ab_fw_cr, decreasing = TRUE)
+
+Ocean_subset <- subset_samples(GP, SampleType == "Ocean")
+ab_ocean <- taxa_sums(Ocean_subset)
+ab_ocean_ord <- sort(ab_ocean, decreasing = TRUE)
+
+Mock_subset <- subset_samples(GP, SampleType == "Mock")
+ab_mock <- taxa_sums(Mock_subset)
+ab_mock_ord <- sort(ab_mock, decreasing = TRUE)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_soils_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones (ordenados de mayor a menor)", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+
+        
+
 
 
 
@@ -334,10 +393,19 @@ gp <- GlobalPatterns
 #----------------------------------------------------------------------------#
                          # Perfil taxonómico #
 # Crear gráfico apilado de abundancia a nivel de Phylum
+plot_bar(cinco, fill = "Phylum") + 
+  geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
+
 # Mostrar solo los 5 phyla más abundantes
-# Agrupar por tipo de muestra
-# Usar facet_wrap para comparar ambientes
-# Incluir gráficos y comentar resultados biológicos
+GP_phylum <- tax_glom(GP, taxrank = "Phylum")
+phylum_ab <- taxa_sums(GP_phylum)
+cinco <- names(sort(phylum_ab, decreasing = TRUE))[1:5]
+seleccion <- prune_taxa(taxa_names(GP_phylum) %in% cinco, GP_phylum)
+plot_bar(seleccion, fill = "Phylum") + 
+  geom_bar(aes(color = Phylum, fill = Phylum), stat = "identity", position = "stack")
+
+
+# comentar resultados biológicos
 
 
 

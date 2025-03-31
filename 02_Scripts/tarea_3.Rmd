@@ -268,6 +268,7 @@ abundancias_taxones <- taxa_sums(filo_sec)
 # Abundancias ordenadas de mayor a menor
 abundancias_ordenadas <- sort(abundancias_taxones, decreasing = TRUE)
 
+
 # gráfica de barras rank-abundance
 par(mgp = c(0, 1, -0.5))
 barplot(abundancias_ordenadas, 
@@ -316,3 +317,199 @@ Los HE (azules) tienen una mayor abundancia que los ED (verdes), mientras que lo
 # Exporta alguna tabla de abundancias o métricas de diversidad a CSV.
 
 ```
+
+
+## Global patterns
+```{r}
+# Preprocesamiento
+
+# Subset para incluir solo muestras de: Soil, Feces, Skin
+# Entrega el código y muestra las dimensiones del objeto resultante
+
+data("GlobalPatterns")
+
+GP <- prune_taxa(taxa_sums(GlobalPatterns) > 0, GlobalPatterns)
+
+SFS_subset <- subset_samples(GP, SampleType == c("Soil", "Feces", "Skin"))
+
+SFS_subset
+
+```
+
+
+
+### Diversidad alfa
+```{r}
+# Calcular 3 índices de diversidad alfa (Shannon, Simpson, Observed)
+indices_diversidad <-plot_richness(GP, x = "Primer", measures = c("Observed", "shannon", "simpson"), color = "SampleType")
+indices_diversidad
+
+
+# Crear boxplots comparativos de los índices entre tipos de muestra
+alpha_meas = c("Observed","Shannon", "Simpson")
+p <- plot_richness(GP, "human", "SampleType", measures=alpha_meas)
+
+```
+
+### Curvas Rank-abundance
+```{r}
+# Crear gráficas de rango-abundancia para cada tipo de muestra
+soil_subset <- subset_samples(GP, SampleType == "Soil")
+ab_soils <- taxa_sums(soil_subset)
+ab_soils_ord  <-sort(ab_soils, decreasing = TRUE)
+
+Feces_subset <- subset_samples(GP, SampleType == "Feces")
+ab_feces <- taxa_sums(Feces_subset)
+ab_feces_ord <- sort(ab_feces, decreasing = TRUE)
+
+Skin_subset <- subset_samples(GP, SampleType == "Skin")
+ab_skin <- taxa_sums(Skin_subset)
+ab_skin_ord <- sort(ab_skin, decreasing = TRUE)
+
+Tongue_subset <- subset_samples(GP, SampleType == "Tongue")
+ab_tongue <- taxa_sums(Tongue_subset)
+ab_tongue_ord <- sort(ab_tongue, decreasing = TRUE)
+
+Freshwater_subset <- subset_samples(GP, SampleType == "Freshwater")
+ab_fw <- taxa_sums(Freshwater_subset)
+ab_fw_ord <- sort(ab_fw, decreasing = TRUE)
+
+Freshwater_creek_subset <- subset_samples(GP, SampleType == "Freshwater (creek)")
+ab_fw_cr <- taxa_sums(Freshwater_creek_subset)
+ab_fw_cr_ord <- sort(ab_fw_cr, decreasing = TRUE)
+
+Ocean_subset <- subset_samples(GP, SampleType == "Ocean")
+ab_ocean <- taxa_sums(Ocean_subset)
+ab_ocean_ord <- sort(ab_ocean, decreasing = TRUE)
+
+Mock_subset <- subset_samples(GP, SampleType == "Mock")
+ab_mock <- taxa_sums(Mock_subset)
+ab_mock_ord <- sort(ab_mock, decreasing = TRUE)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_soils_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_feces_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_skin_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_tongue_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_fw_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_fw_cr_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_fw_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_ocean_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+
+par(mgp = c(0, 1, -0.5))
+barplot(ab_mock_ord[1:200], 
+        main = "Rank-Abundance", 
+        xlab = "Taxones", 
+        ylab = "Abundancia total", 
+        col = "lightseagreen", 
+        las = 2,  
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        width = 1)
+```
+
+
+### Perfil taxonomico
+```{r}
+# Crear gráfico apilado de abundancia a nivel de Phylum
+plot_bar(GP, fill = "Phylum") + 
+  geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
+
+# Mostrar solo los 5 phyla más abundantes
+GP_phylum <- tax_glom(GP, taxrank = "Phylum")
+phylum_ab <- taxa_sums(GP_phylum)
+cinco <- names(sort(phylum_ab, decreasing = TRUE))[1:5]
+seleccion <- prune_taxa(taxa_names(GP_phylum) %in% cinco, GP_phylum)
+plot_bar(seleccion, fill = "Phylum") + 
+  geom_bar(aes(color = Phylum, fill = Phylum), stat = "identity", position = "stack")
+
+
+# Agrupar por tipo de muestra
+plot_bar(seleccion, fill = "SampleType") + 
+  geom_bar(aes(color = SampleType, fill = SampleType), stat = "identity", position = "stack")
+
+# comentar resultados biológicos
+
+```
+
+
+###
