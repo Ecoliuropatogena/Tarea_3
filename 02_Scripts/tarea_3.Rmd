@@ -1,6 +1,6 @@
 ---
 title: "Tarea_3"
-author: "Ivan"
+author: "Jacobo Cruz Oseas Ivan"
 date: "2025-03-27"
 output: html_document
 ---
@@ -29,7 +29,9 @@ View(otu_table(filo_sec))
 
 View(sample_data(filo_sec))
 
-View(tax_table(filo_sec))
+View(tax_table(filo_sec)) # no tiene tax table, pero podemos usar la informacion de rank
+
+rank_names(filo_sec)
 ```
 
 De acuerdo con el codigo anterior ¿Cuántas muestras y taxones contiene el objeto? - Tiene 222 muestras y 130 taxones
@@ -155,6 +157,8 @@ for (i in 1:25) {
   print(paste0("El tamaño muestral es: ",tamaño_muestral,
                 " para la muestra ",muestra))
 }
+
+# Nota: Despues de hacer la funcion me di cuenta de que solo debia activar la opcion para ver los nombres dentro del codigo de la misma grafica, pero ya era muy tarde :(
 ```
 La muestra que se deberia de descartar es la numero 56, ya que cuenta con 1776 individuos y no llega a su asintota. Esto lo comprobamos en la grafica, ya que es la unica linea cuyo tamaño muestral es menor a 5000.
 
@@ -177,6 +181,8 @@ plot_richness(filosec.prune, x = "nationality", measures = "shannon", color = "s
 
 plot_richness(filosec.prune, measures="Shannon", x="sex", color="bmi_group")
 
+log(108) -> max_sh
+max_sh
 
 # Simpson
 plot_richness(filosec.prune, x = "nationality", measures = "simpson", color = "sex")
@@ -184,10 +190,15 @@ plot_richness(filosec.prune, x = "nationality", measures = "simpson", color = "s
 plot_richness(filosec.prune, measures="simpson", x="sex", color="bmi_group")
 
 
+
+
 ```
 
 ¿Qué interpretas de estas gráficas?
+Que hay unformidad de abundancias entre hombres y mujeres, lo que cambia un poco es la presencia de "lean", ya que hay más en hombres que en mujeres
+
 ¿Hay diferencias notorias entre grupos?
+Unicamente que hay más "lean" en hombres
 
 
 ### Filtrado y transformación
@@ -261,6 +272,8 @@ pcoa_plot +
  - En este caso las coordenadas principales no son muy explicativas
 ya que la PCoA 1 explica tan solo un 42% de la varianza, mientras que la PCoA2 explica el 17.2%, eso implica que los grupos DI, HE y ED no son lo suficientemente explicativos como para realizar una agrupación eficiente de las muestras brindadas.
 
+### Rank-abundance
+
 ```{r}
 # calculo de de la abundancia de cada taxon
 abundancias_taxones <- taxa_sums(filo_sec)
@@ -286,7 +299,11 @@ barplot(abundancias_ordenadas,
 
 
 ```
+¿Qué tan dominada está la comunidad por pocos taxones y cuáles son?
+Esta muy dominada por pocos taxones, tanto que la mayor abundancia de la muestra se concentra en los primeros 6 taxones de la grafica
 
+¿Qué tipo de distribución parece seguir?
+logaritmica
 
 ### Graficas de abundancia por taxón
 
@@ -314,7 +331,7 @@ Los HE (azules) tienen una mayor abundancia que los ED (verdes), mientras que lo
 
 ### Exportar resultados
 ```{r}
-# Exporta alguna tabla de abundancias o métricas de diversidad a CSV.
+write.csv(abundancias_taxones, file = "../03_Results/suma_abundancias_filosec.csv", row.names = TRUE)
 
 ```
 
@@ -508,8 +525,61 @@ plot_bar(seleccion, fill = "SampleType") +
   geom_bar(aes(color = SampleType, fill = SampleType), stat = "identity", position = "stack")
 
 # comentar resultados biológicos
-
+# Dado que se realizaron las graficas con los 5 taxones más abundantes pues hay presencia de los 5 taxones en todas las muestras, sin embargo, conforme cambia el tipo de muestra tambien cambia la abundancia de relativa de cada taxón.
+# Por ejemplo, en muestras de agua fresca quienes poseen una mayor abundancia son las cianobacterias, mientras que en muestras de tongue quienes tienen mayor abundancia son las proteobacterias
 ```
 
 
-###
+### Diversidad beta
+
+```{r}
+                        # Diversidad Beta #
+
+# Calcular distancia Bray-Curtis
+d_bc_gp <- distance(GP, method = "bray")
+
+# Ahora obtenemos las ordenadas
+datos_pcoa_gp <- ordinate(GP, method = "PCoA", distance = d_bc_gp)
+
+# visualización
+pcoa_plot <- plot_ordination(GP, datos_pcoa_gp, 
+                             type = "samples",       
+                             color = "SampleType") +   
+  geom_point(size = 2) +                             
+  stat_ellipse(type = "norm", level = 0.95, linetype = 2) +  
+  ggtitle("PCoA (Bray-Curtis) de GlobalPatterns") +
+  labs(x = paste0("PC1 (", round(datos_pcoa_gp$values$Relative_eig[1]*100, 1), "%)"),
+       y = paste0("PC2 (", round(datos_pcoa_gp$values$Relative_eig[2]*100, 1), "%)")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+pcoa_plot
+
+#   Incluir stress plot
+eig <- datos_pcoa_gp$values$Relative_eig  
+scree_plot <- ggplot(data = data.frame(PC = 1:length(eig), Variance = eig),
+                     aes(x = PC, y = Variance)) +
+  geom_line() +
+  geom_point() +
+  xlab("Eje PCoA") +
+  ylab("Proporción de varianza explicada") +
+  ggtitle("Scree Plot para PCoA") +
+  theme_minimal()
+print(scree_plot)
+
+#   Realizar PERMANOVA para diferencias entre grupos
+df_gp <- data.frame(sample_data(GlobalPatterns))
+
+# Usamos la función adonis() del paquete vegan:
+permanova_result <- adonis(d_bc_gp ~ SampleType, data = df_gp)
+permanova_result$aov.tab
+# Sampletype 8 presenta una diferencia estadisticamente significativa (0.001***) contra el resto de Sampletypes
+
+
+#   Interpretar resultados en contexto ecológico
+# De acuerdon con el PCoA las unicas muestras que se agrupan diferencialmente del resto son las que corresponden a heces (Las 4 que existen son agrpadas en un solo cluster), ya que son las unicas que fueron encerradas en una elipse.
+# Esto tambien depende mucho de los ejes, los cuales en este caso explican muy poco de la variación en las muestras (sumados explican menos del 30%), esto se ve reflejado en el scree plot, en el cual vemos que los ejes del 1 al 5 son aquellos que explican entre el 13.9 y el 7.5% de la variación.
+#Posteriormente con la aov.tab del permanova observamos que el Sampletye 8 es aquel que muestra una diferencia estadisticamente significativa contra el resto de Sampletypes, lo cual coincide con lo que vemos en el PCoA.
+
+
+
+```

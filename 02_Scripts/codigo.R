@@ -221,7 +221,7 @@ max(porcentaje_cambio)
 #  ¿Los grupos se separan visiblemente?
 #  ¿Qué podría estar causando esas diferencias?
 
-BiocManager::install("MicrobiotaProcess")
+
 library(MicrobiotaProcess)
 library(vegan)
 library(ggplot2)
@@ -283,7 +283,7 @@ barplot(abundancias_ordenadas,
 #----------------------------------------------------------------------------#
                   # Gráficas apiladas de abundancia por taxón#
 
-#Agrupa por phylum o género y grafica la composición de cada muestra como gráfica de barras apiladas.
+# Agrupa por phylum o género y grafica la composición de cada muestra como gráfica de barras apiladas.
 
 # Podemos usar unicamente la funcion plot bar
 plot_bar(filo_sec, fill = "Phylum")
@@ -405,23 +405,48 @@ plot_bar(seleccion, fill = "Phylum") +
   geom_bar(aes(color = Phylum, fill = Phylum), stat = "identity", position = "stack")
 
 
-# comentar resultados biológicos
-
-
-
 
 
 #----------------------------------------------------------------------------#
                         # Diversidad Beta #
 
 # Calcular distancia Bray-Curtis
-# Realizar PCoA
-# Visualizar con:
-#   Colores por tipo de muestra
-#   Elipses de confianza del 95%
+d_bc_gp <- distance(GP, method = "bray")
+
+# Ahora obtenemos las ordenadas
+datos_pcoa_gp <- ordinate(GP, method = "PCoA", distance = d_bc_gp)
+
+# visualización
+pcoa_plot <- plot_ordination(GP, datos_pcoa_gp, 
+                             type = "samples",       
+                             color = "SampleType") +   
+  geom_point(size = 2) +                             
+  stat_ellipse(type = "norm", level = 0.95, linetype = 2) +  
+  ggtitle("PCoA (Bray-Curtis) de GlobalPatterns") +
+  labs(x = paste0("PC1 (", round(datos_pcoa_gp$values$Relative_eig[1]*100, 1), "%)"),
+       y = paste0("PC2 (", round(datos_pcoa_gp$values$Relative_eig[2]*100, 1), "%)")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+pcoa_plot
+
 #   Incluir stress plot
+eig <- datos_pcoa_gp$values$Relative_eig  
+scree_plot <- ggplot(data = data.frame(PC = 1:length(eig), Variance = eig),
+                     aes(x = PC, y = Variance)) +
+  geom_line() +
+  geom_point() +
+  xlab("Eje PCoA") +
+  ylab("Proporción de varianza explicada") +
+  ggtitle("Scree Plot para PCoA") +
+  theme_minimal()
+print(scree_plot)
+
 #   Realizar PERMANOVA para diferencias entre grupos
-#   Interpretar resultados en contexto ecológico
+df_gp <- data.frame(sample_data(GlobalPatterns))
+
+# Usamos la función adonis() del paquete vegan:
+permanova_result <- adonis(d_bc_gp ~ SampleType, data = df_gp)
+permanova_result$aov.tab
 
 
 
