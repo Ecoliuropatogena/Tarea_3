@@ -583,3 +583,32 @@ permanova_result$aov.tab
 
 
 ```
+
+
+### Preguntas de interpretación
+¿Qué ambiente muestra mayor diversidad alfa? 
+El suelo.
+
+¿A qué factores podría deberse?
+A la disponibilidad de nutrientes para los organismos que estan presentes y a condiciones ambientales que favorecen su desarrollo en el mismo.
+
+¿Qué se observa en la ordenación PCoA respecto a similitudes entre muestras?
+Los unicos grupos que se forman de manera notoria son los de las heces y los de el agua dulce, y esto se debe a la presencia y abundancia de ciertos phylos caracteristicos, tales como las cianobacterias en el aga dulce de arroyo.
+Con respecto al resto de grupos que se forman, podemos ver que se agrupan de manera indistinta, ya que hay grupos en los que hay muestras de suelo, oceano y sedimento, sin embargo, la formación de este conjunto no es diferencial. 
+
+
+¿Qué patrón de dominancia taxonómica muestran las curvas de rango-abundancia?
+Logaritmico o de cola larga
+
+
+¿Qué phyla son dominantes en cada ambiente y qué implicaciones ecológicas sugieren?
+agua dulce- arrollo: cianobacterias
+suelo: proteobacteria
+mock: Abundancia uniforme de todos lo phyla
+sedimento: proteobacterias
+piel: proteobacterias y firmicutes
+heces: bacteroidetes
+Tongue: proteobacteria.
+
+Si las muestras son representativas de cada ambiente del que fueron tomadas podria ser un indicador del bacterioma necesario para que la zona de la que fueron tomadas se conserve en el estado en el que estaba cuando se tomaron las muestras.
+
