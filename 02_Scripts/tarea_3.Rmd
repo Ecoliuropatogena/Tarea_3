@@ -43,7 +43,7 @@ De acuerdo con el codigo anterior ¿Cuántas muestras y taxones contiene el obje
 Para realizar las curvas de rarefacción usaremos la función rarecurve de vegan.
 
 Para ejecutar la función es necesario convertir nuestra otu table a un data frame o matriz, y posteriormente invertir la posición de las columnas con la de los renglones.
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # generamos un objeto a partir de la otu table
 otu_table(filo_sec) -> abundancias
 
@@ -65,6 +65,7 @@ colores_chat <- c("black", "darkblue", "darkcyan", "darkgoldenrod",
 
 # Generamos las graficas utilizando el el data frame transpuesto, variando el rango de renglones (samples) que se estan tomando en cuenta.
 
+pdf("../03_Results/curvas_de_rarefacción.pdf", width = 8, height = 6)
 rarecurve(t_data_abundancias[1:25, ], 
           step = 25, 
           xlab = "Tamaño muestral", 
@@ -72,6 +73,7 @@ rarecurve(t_data_abundancias[1:25, ],
           tidy = FALSE,
           col = colores_chat,  
           label = FALSE) 
+
 
 rarecurve(t_data_abundancias[26:50, ], 
           step = 25, 
@@ -136,15 +138,17 @@ rarecurve(t_data_abundancias[201:222, ],
           tidy = FALSE,
           col = colores_chat,  
           label = FALSE)
+dev.off()
 
 ```
+![Curvas de rarefacción](../03_Results/curvas_de_rarefacción.pdf)
 
 ¿Qué indican estas curvas?
   - Nos dicen si el numero de muestreos por zona fue            suficiente para capturar una riqueza de especies cercana     a la realidad.
   
 ¿Hay muestras que deberían descartarse por bajo conteo?
   - Si, pero debido a que realice las graficas para             conjuntos de 25 muestras no se sabe exactamente que         muestra es, de manera que realice el siguiente codigo       para averiguarlo.
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Analizando las graficas podemos notar que en el segmento    que va de 51 a 75 hay una muestra que no llega a su         asintota, de manera que trabajare con ese segmento.
 
 t_data_abundancias[51:75,] -> rango 
@@ -168,31 +172,43 @@ Calcular y graficar los siguientes indices
 - Riqueza
 - Shannon
 - Simpson
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # primero recortareos a aquellas taxa que tienen menos de 1 de abundancia
 filosec.prune <- prune_taxa(taxa_sums(filo_sec) > 1, filo_sec)
 
+
 # Riqueza
+pdf("../03_Results/riqueza.pdf", width = 8, height = 6)
 plot_richness(filosec.prune, x = "nationality", measures = "Observed", color = "sex")
+dev.off()
+
 # La grafica nos muestra la riqueza de acuerdo a la         nacionalidad y ditingue los sexos por colores.
 
 # Shannon
+pdf("../03_Results/Shannon.pdf", width = 8, height = 6)
 plot_richness(filosec.prune, x = "nationality", measures = "shannon", color = "sex")
 
 plot_richness(filosec.prune, measures="Shannon", x="sex", color="bmi_group")
+dev.off()
+
+
 
 log(108) -> max_sh
 max_sh
 
 # Simpson
+pdf("../03_Results/Simpson.pdf", width = 8, height = 6)
 plot_richness(filosec.prune, x = "nationality", measures = "simpson", color = "sex")
 
 plot_richness(filosec.prune, measures="simpson", x="sex", color="bmi_group")
-
+dev.off()
 
 
 
 ```
+![Riqueza](../03_Results/riqueza.pdf)
+![Shannon](../03_Results/Shannon.pdf)
+![Simpson](../03_Results/Simpson.pdf)
 
 ¿Qué interpretas de estas gráficas?
 Que hay unformidad de abundancias entre hombres y mujeres, lo que cambia un poco es la presencia de "lean", ya que hay más en hombres que en mujeres
@@ -205,7 +221,7 @@ Unicamente que hay más "lean" en hombres
 Aplica un filtrado para quedarte solo con los géneros más 
 abundantes de acuerdo a un criterio dado
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Primero crearé un objeto que contenga la riqueza basal y haré comparaciones contra otros objetos
 filtro_basal <- prune_taxa(taxa_sums(filo_sec) > 1, filo_sec)
 estimate_richness(filtro_basal, measures = "Observed") -> Riqueza_i # Riqueza inicial
@@ -244,25 +260,30 @@ datos_ordenadas_pcoa <- ordinate(filo_sec, method = "PCoA", distance = ditancia_
 # primero hacemos el grafico base generando los puntos y separandolos por color de acuerdo a las variables de los metadatos.
 # Aquí mismo se generan los ejes de x y y, seleccionado el punto en el que intersectarán.
 # Ademas se añadiran los elipses.
-
+pdf("../03_Results/PCoA.pdf", width = 8, height = 6)
 pcoa_plot<- plot_ordination(filo_sec, datos_ordenadas_pcoa, 
                              type = "sample", 
                              color = "group") +
   geom_point(size = 0.5) +  
   geom_hline(yintercept = 0, color = "darkgreen", linetype = 5) +
   geom_vline(xintercept = 0, color = "navy", linetype = 5) +
-  stat_ellipse(aes(group = group), level = 0.8, color = "darkred", linetype = "dashed") # Los elipses generados son de acuerdo a los elementos dentro de la variable group, es decir : DI, HE y ED.
+  stat_ellipse(aes(group = group), level = 0.8, color = "darkred", linetype = "dashed")
+# Los elipses generados son de acuerdo a los elementos dentro de la variable group, es decir : DI, HE y ED.
 
 # Por ultimo se modificaran las etiquetas de los ejes y el titulo de la grafica
+
 pcoa_plot +                         
   ggtitle("PCoA (Bray-Curtis)") +               
   labs(x = paste0("PCoA1 (", round(datos_ordenadas_pcoa$values$Relative_eig[1] * 100, 1), "%)"),
        y = paste0("PCoA2 (", round(datos_ordenadas_pcoa$values$Relative_eig[2] * 100, 1), "%)")) +  # Etiquetas con porcentaje de varianza
   theme_bw() +                                 
   theme(plot.title = element_text(hjust = 0.5)) 
+dev.off()
 
 
 ```
+![PCoA](../03_Results/PCoA.pdf)
+
 
 ¿Los grupos se separan visiblemente?
   - no, hay un area muy grande en la que convergen las 3 elipses generadas.
@@ -274,7 +295,7 @@ ya que la PCoA 1 explica tan solo un 42% de la varianza, mientras que la PCoA2 e
 
 ### Rank-abundance
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # calculo de de la abundancia de cada taxon
 abundancias_taxones <- taxa_sums(filo_sec)
 
@@ -283,6 +304,8 @@ abundancias_ordenadas <- sort(abundancias_taxones, decreasing = TRUE)
 
 
 # gráfica de barras rank-abundance
+
+pdf("../03_Results/Rank.abundance.pdf", width = 8, height = 6)
 par(mgp = c(0, 1, -0.5))
 barplot(abundancias_ordenadas, 
         main = "Rank-Abundance", 
@@ -292,13 +315,14 @@ barplot(abundancias_ordenadas,
         las = 2,  
         cex.names = 0.5,
         cex.axis = 0.7)
-
-
+dev.off()
 
 
 
 
 ```
+![Rank-abundance](../03_Results/Rank.abundance.pdf)
+
 ¿Qué tan dominada está la comunidad por pocos taxones y cuáles son?
 Esta muy dominada por pocos taxones, tanto que la mayor abundancia de la muestra se concentra en los primeros 6 taxones de la grafica
 
@@ -307,21 +331,34 @@ logaritmica
 
 ### Graficas de abundancia por taxón
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Podemos usar únicamente la funcion plot bar
+pdf("../03_Results/abundancia_phylum.pdf", width = 8, height = 6)
 plot_bar(filo_sec, fill = "Phylum")
+dev.off()
 
 # o complementarla
+pdf("../03_Results/abundancia_phylum_+.pdf", width = 8, height = 6)
 plot_bar(filo_sec, fill = "Phylum") + 
   geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
+dev.off()
 
 # separada por grupos
+
+pdf("../03_Results/abundancia_grupos.pdf", width = 8, height = 6)
 plot_bar(filo_sec, fill = "group") + 
   geom_bar(aes(color=group, fill=group), stat="identity", position="stack")
+
+dev.off()
 
 # Agrupe solo a nivel de phylum porque a nivel de genero o familia se ve un desastre.
 
 ```
+![Abundancias_taxon](../03_Results/abundancia_phylum.pdf)
+![Abundancias_taxon_complemento](../03_Results/abundancia_phylum_+.pdf)
+![Abundancias_grupos](../03_Results/abundancia_grupos.pdf)
+![Abundancias_grupos](../03_Results/abundancia_grupos.pdf)
+
 ¿Hay algún phylum que domine?
 si, los firmicutes.
 
@@ -330,14 +367,14 @@ Los HE (azules) tienen una mayor abundancia que los ED (verdes), mientras que lo
 
 
 ### Exportar resultados
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 write.csv(abundancias_taxones, file = "../03_Results/suma_abundancias_filosec.csv", row.names = TRUE)
 
 ```
 
 
 ## Global patterns
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Preprocesamiento
 
 # Subset para incluir solo muestras de: Soil, Feces, Skin
@@ -356,20 +393,28 @@ SFS_subset
 
 
 ### Diversidad alfa
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Calcular 3 índices de diversidad alfa (Shannon, Simpson, Observed)
+pdf("../03_Results/indices_diversidad.pdf", width = 8, height = 6)
 indices_diversidad <-plot_richness(GP, x = "Primer", measures = c("Observed", "shannon", "simpson"), color = "SampleType")
 indices_diversidad
+dev.off()
+
 
 
 # Crear boxplots comparativos de los índices entre tipos de muestra
 alpha_meas = c("Observed","Shannon", "Simpson")
+
+pdf("../03_Results/boxplots.pdf", width = 8, height = 6)
 p <- plot_richness(GP, "human", "SampleType", measures=alpha_meas)
+dev.off()
 
 ```
+![indices_diversidad](../03_Results/indices_diversidad.pdf)
+![Boxplots](../03_Results/boxplots.pdf)
 
 ### Curvas Rank-abundance
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Crear gráficas de rango-abundancia para cada tipo de muestra
 soil_subset <- subset_samples(GP, SampleType == "Soil")
 ab_soils <- taxa_sums(soil_subset)
@@ -403,6 +448,7 @@ Mock_subset <- subset_samples(GP, SampleType == "Mock")
 ab_mock <- taxa_sums(Mock_subset)
 ab_mock_ord <- sort(ab_mock, decreasing = TRUE)
 
+pdf("../03_Results/rank-abundance-muestras.pdf", width = 8, height = 6)
 par(mgp = c(0, 1, -0.5))
 barplot(ab_soils_ord[1:200], 
         main = "Rank-Abundance", 
@@ -502,37 +548,48 @@ barplot(ab_mock_ord[1:200],
         cex.names = 0.5,
         cex.axis = 0.7,
         width = 1)
-```
 
+dev.off()
+```
+![Abundancia portipo](../03_Results/rank-abundance-muestras.pdf)
 
 ### Perfil taxonomico
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Crear gráfico apilado de abundancia a nivel de Phylum
+pdf("../03_Results/barrasapiladas_phylum.pdf", width = 8, height = 6)
 plot_bar(GP, fill = "Phylum") + 
   geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
+dev.off()
 
 # Mostrar solo los 5 phyla más abundantes
 GP_phylum <- tax_glom(GP, taxrank = "Phylum")
 phylum_ab <- taxa_sums(GP_phylum)
 cinco <- names(sort(phylum_ab, decreasing = TRUE))[1:5]
 seleccion <- prune_taxa(taxa_names(GP_phylum) %in% cinco, GP_phylum)
+
+pdf("../03_Results/taxones_mas_abundantes.pdf", width = 8, height = 6)
 plot_bar(seleccion, fill = "Phylum") + 
   geom_bar(aes(color = Phylum, fill = Phylum), stat = "identity", position = "stack")
+dev.off()
 
 
 # Agrupar por tipo de muestra
+pdf("../03_Results/taxones_abundantes_agrupados_muestra.pdf", width = 8, height = 6)
 plot_bar(seleccion, fill = "SampleType") + 
   geom_bar(aes(color = SampleType, fill = SampleType), stat = "identity", position = "stack")
+dev.off()
 
 # comentar resultados biológicos
 # Dado que se realizaron las graficas con los 5 taxones más abundantes pues hay presencia de los 5 taxones en todas las muestras, sin embargo, conforme cambia el tipo de muestra tambien cambia la abundancia de relativa de cada taxón.
 # Por ejemplo, en muestras de agua fresca quienes poseen una mayor abundancia son las cianobacterias, mientras que en muestras de tongue quienes tienen mayor abundancia son las proteobacterias
 ```
-
+![perfil taxonomico](../03_Results/barrasapiladas_phylum.pdf)
+![phylum más abundantes](../03_Results/taxones_mas_abundantes.pdf)
+![phylum más abundantes por tipo de muestra](../03_Results/taxones_abundantes_agrupados_muestra.pdf)
 
 ### Diversidad beta
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
                         # Diversidad Beta #
 
 # Calcular distancia Bray-Curtis
@@ -542,6 +599,7 @@ d_bc_gp <- distance(GP, method = "bray")
 datos_pcoa_gp <- ordinate(GP, method = "PCoA", distance = d_bc_gp)
 
 # visualización
+pdf("../03_Results/PCoA_GP.pdf", width = 8, height = 6)
 pcoa_plot <- plot_ordination(GP, datos_pcoa_gp, 
                              type = "samples",       
                              color = "SampleType") +   
@@ -553,8 +611,12 @@ pcoa_plot <- plot_ordination(GP, datos_pcoa_gp,
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 pcoa_plot
+dev.off()
+
+
 
 #   Incluir stress plot
+pdf("../03_Results/stressplot.pdf", width = 8, height = 6)
 eig <- datos_pcoa_gp$values$Relative_eig  
 scree_plot <- ggplot(data = data.frame(PC = 1:length(eig), Variance = eig),
                      aes(x = PC, y = Variance)) +
@@ -565,6 +627,7 @@ scree_plot <- ggplot(data = data.frame(PC = 1:length(eig), Variance = eig),
   ggtitle("Scree Plot para PCoA") +
   theme_minimal()
 print(scree_plot)
+dev.off()
 
 #   Realizar PERMANOVA para diferencias entre grupos
 df_gp <- data.frame(sample_data(GlobalPatterns))
@@ -583,7 +646,8 @@ permanova_result$aov.tab
 
 
 ```
-
+![PCoA GP](../03_Results/PCoA_GP.pdf)
+![stressplot](../03_Results/stressplot.pdf)
 
 ### Preguntas de interpretación
 ¿Qué ambiente muestra mayor diversidad alfa? 
